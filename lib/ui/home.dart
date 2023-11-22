@@ -48,7 +48,8 @@ class Home extends StatelessWidget {
       // appBar: AppBar(
       //   title: const Text("Home Page"),
       // ),
-      body: SafeArea(
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Container(
           padding: const EdgeInsets.all(18),
           width: size.width,
