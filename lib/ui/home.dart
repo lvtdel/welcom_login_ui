@@ -1,42 +1,32 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import '../Constants.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
 
-  Future<void> _showMyDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Thông báo'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Center(
-                  child: Icon(
-                    Icons.check_circle,
-                    size: 50,
-                    color: Colors.green,
-                  ),
-                ),
-                Text('Bạn đã đăng nhập thành công!'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Đóng'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  final ScrollController _scrollController = ScrollController();
+  // late FocusNode _emailFocusNode;
+  // late FocusNode _passwordFocusNode;
+  // Dùng khi muốn focus tự do như FocusScope...RequestFocus(_focusNode)
+  // Nếu chỉ cần FocusScope....nextFocus() thì không cần
+
+  @override
+  void initState() {
+    super.initState();
+
+    // _emailFocusNode = FocusNode();
+    // _passwordFocusNode = FocusNode();
+
+    var keyboardVisibilityController = KeyboardVisibilityController();
+    keyboardVisibilityController.onChange.listen((bool visible) {
+      _onKeyboardVisibleChange(visible);
+    });
   }
 
   @override
@@ -45,15 +35,13 @@ class Home extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xfff0f1f5),
-      // appBar: AppBar(
-      //   title: const Text("Home Page"),
-      // ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         physics: const BouncingScrollPhysics(),
         child: Container(
           padding: const EdgeInsets.all(18),
           width: size.width,
-          height: size.height,
+          height: size.height + 1,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,10 +105,17 @@ class Home extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.only(left: 10),
                                   width: 300,
-                                  child: const TextField(
+                                  child: TextField(
+                                    // keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    // focusNode: _emailFocusNode,
+                                    onEditingComplete: () {
+                                      // Focus.of(context).requestFocus(_passwordFocusNode);
+                                      FocusScope.of(context).nextFocus();
+                                    },
                                     cursorColor: Colors.grey,
-                                    style: TextStyle(color: Colors.black54),
-                                    decoration: InputDecoration(
+                                    style: const TextStyle(color: Colors.black54),
+                                    decoration: const InputDecoration(
                                         border: InputBorder.none,
                                         hintText: "example@gmail.com"),
                                   ),
@@ -149,14 +144,19 @@ class Home extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.only(left: 10),
                                   width: 300,
-                                  child: const TextField(
+                                  child: TextField(
+                                    // keyboardType: TextInputType.visiblePassword,
+                                    textInputAction: TextInputAction.done,
+                                    onEditingComplete: () {
+                                      _onClickLogin(context);
+                                    },
                                     obscureText: true,
                                     cursorColor: Colors.grey,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.black54,
                                         fontSize: 20,
                                         letterSpacing: 1.4),
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                       border: InputBorder.none,
                                       hintText: "-----------",
                                     ),
@@ -198,7 +198,7 @@ class Home extends StatelessWidget {
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () {
-                          _showMyDialog(context);
+                          _onClickLogin(context);
                         },
                         child: Container(
                           padding: const EdgeInsets.all(22),
@@ -206,8 +206,14 @@ class Home extends StatelessWidget {
                           width: 60,
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                                colors: [Color(0xff382743), Color(0xffff4590)],
-                                stops: [0, 1],
+                                colors: [
+                                  Color(0xff382743),
+                                  Color(0xffff4590)
+                                ],
+                                stops: [
+                                  0,
+                                  1
+                                ],
                                 begin: FractionalOffset.topLeft,
                                 end: FractionalOffset.bottomRight),
                             shape: BoxShape.circle,
@@ -223,6 +229,53 @@ class Home extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  _onClickLogin(BuildContext context) {
+    _showMyDialog(context);
+  }
+
+  _onKeyboardVisibleChange(visible) async {
+    if (visible == true) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      _scrollController.animateTo(
+          350, duration: const Duration(milliseconds: 200),
+          curve: Curves.linear);
+    }
+  }
+
+  Future<void> _showMyDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Thông báo'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Center(
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 50,
+                    color: Colors.green,
+                  ),
+                ),
+                Text('Bạn đã đăng nhập thành công!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Đóng'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
